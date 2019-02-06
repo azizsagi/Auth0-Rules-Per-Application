@@ -237,8 +237,8 @@ var addRuleToAssociatedApplication = function(rule, rulesPerClient) {
 			if (matchedApplication) {
 				var applicationAllowed = matchedApplication[1];
 				
-				for(var rpc in rulesPerClient) {	
-				 	if (rulesPerClient[rpc].client === applicationAllowed) {
+				for(var rpc in rulesPerClient) {
+					if (rulesPerClient[rpc].client === applicationAllowed) {
 						 rulesForThisClient[rpc].rules.push( 
 						                                       {name: rule.name,
 															    enabled: rule.enabled
@@ -262,31 +262,30 @@ var addRuleToAssociatedApplication = function(rule, rulesPerClient) {
 };
 
 
-//Global
+			async function fetchAsync (method) {
+						let data = await (await fetch(AUTH0_AUDIENCE+method, {
+										  method: 'GET',
+										  headers: myHeaders,
+										})).json();
+										
+						return data;
+					}
 
+
+
+const myHeaders = new Headers();
+myHeaders.append('Content-Type', 'application/json');
+myHeaders.append('Authorization', 'Bearer '+accessToken);
 
 		
-function getApplications() {
+		
+async function getApplications() {
    //Reset
-   rulesForThisClient = [];   
-   const myHeaders = new Headers();
-
-		myHeaders.append('Content-Type', 'application/json');
-		myHeaders.append('Authorization', 'Bearer '+accessToken);
-		
+   rulesForThisClient = [];   //reset
+   allRules = []; //reset
 		
 		//Fetch Clients
-		fetch(AUTH0_AUDIENCE+'clients', {
-		  method: 'GET',
-		  headers: myHeaders,
-		})
-		.then(response => {
-								if (response.status === 200) {
-								  return response.json();
-								} else {
-								  throw new Error('Something went wrong on api server!');
-								}
-							})
+		await fetchAsync('clients')
 		.then(response => {
 							for(var client in response) {
 								
@@ -306,20 +305,9 @@ function getApplications() {
 						  
 		//End Fetch Clients
 		//Fetch Rules				  
-		fetch(AUTH0_AUDIENCE+'rules', {
-		  method: 'GET',
-		  headers: myHeaders,
-		})
+		await fetchAsync('rules')
 		.then(response => {
-								if (response.status === 200) {
-								  return response.json();
-								} else {
-								  throw new Error('Something went wrong on api server!');
-								}
-							})
-		.then(response => {
-							console.log(response);
-			                 for(var rule in response)
+							 for(var rule in response)
 							 {
 								 if(response[rule]!=""){										
 										   // check for client name on which the rule is applicable
@@ -331,6 +319,7 @@ function getApplications() {
 															 
 		})
 		.then(() => {
+			                
 			                 //Let's analyze the rules one by one
 							 for(var singleRule in allRules)
 							 {
@@ -340,8 +329,7 @@ function getApplications() {
 
 							 
 		}).then(() => {
-			                     console.log(rulesForThisClient);
-								 applicationView.style.display = 'block';
+			                     applicationView.style.display = 'block';
 								 //Display
 								 
 								 myList = document.getElementById("rules");
@@ -386,7 +374,7 @@ applicationsViewBtn.addEventListener('click', function() {
     pingView.style.display = 'none';
     profileView.style.display = 'none';	
 	
-	getApplications();
+	getApplications(); 
 	
 	});
  
