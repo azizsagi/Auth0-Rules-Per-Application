@@ -276,7 +276,7 @@ function getApplications() {
 		
 		
 		//Fetch Clients
-		fetch('https://mandhar.auth0.com/api/v2/clients', {
+		fetch(AUTH0_AUDIENCE+'clients', {
 		  method: 'GET',
 		  headers: myHeaders,
 		})
@@ -306,7 +306,7 @@ function getApplications() {
 						  
 		//End Fetch Clients
 		//Fetch Rules				  
-		fetch('https://mandhar.auth0.com/api/v2/rules', {
+		fetch(AUTH0_AUDIENCE+'rules', {
 		  method: 'GET',
 		  headers: myHeaders,
 		})
@@ -387,10 +387,6 @@ applicationsViewBtn.addEventListener('click', function() {
     profileView.style.display = 'none';	
 	
 	getApplications();
-	
-	
-	
-	
 	
 	});
  
