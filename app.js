@@ -4,7 +4,7 @@ window.addEventListener('load', function() {
   var expiresAt;
   var rulesForThisClient = [];
   var allRules = [];
-
+  var apiAccessToken;
 
   var content = document.querySelector('.content');
   var loadingSpinner = document.getElementById('loading');
@@ -85,18 +85,26 @@ window.addEventListener('load', function() {
   function localLogin(authResult) {
     // Set isLoggedIn flag in localStorage
     localStorage.setItem('isLoggedIn', 'true');
-    // Set the time that the access token will expire at
+    
+	// Set the time that the access token will expire at
+	
     expiresAt = JSON.stringify(
         authResult.expiresIn * 1000 + new Date().getTime()
     );
     accessToken = authResult.accessToken;
     idToken = authResult.idToken;
+	
+	//Now Get API Token
+	getApiToken();
 	//console.log(idToken);
   }
 
   function renewTokens() {
     webAuth.checkSession({}, (err, authResult) => {
       if (authResult && authResult.accessToken && authResult.idToken) {
+		  
+		  //Get Management API Access Token
+		  
         localLogin(authResult);
       } else if (err) {
         alert(
@@ -111,10 +119,12 @@ window.addEventListener('load', function() {
   function logout() {
     // Remove isLoggedIn flag from localStorage
     localStorage.removeItem('isLoggedIn');
+	localStorage.removeItem('accessToken');
     // Remove tokens and expiry time
     accessToken = '';
     idToken = '';
     expiresAt = 0;
+	apiAccessToken = '';
     pingMessage.style.display = 'none';
     displayButtons();
   }
@@ -226,6 +236,33 @@ window.addEventListener('load', function() {
     };
     xhr.send();
   }
+  
+  
+  function getApiToken() {
+	  
+	  (async () => {
+		  const rawResponse = await fetch('https://mandhar.auth0.com/oauth/token', {
+			method: 'POST',
+			headers: {
+			   'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				
+				"grant_type": "client_credentials",
+				"client_id": AUTH0_API_CLIENT_ID,
+				"client_secret": AUTH0_API_CLIENT_SECRET,
+				"audience": AUTH0_AUDIENCE
+			})
+		  }).catch(error => {
+								console.error(error);
+						  });
+						  
+		  const content = await rawResponse.json();          
+		  localStorage.setItem('accessToken',content.access_token);
+		})();
+
+   
+  }
 
 
 //Extended functionality
@@ -263,19 +300,26 @@ var addRuleToAssociatedApplication = function(rule, rulesPerClient) {
 
 
 			async function fetchAsync (method) {
-						let data = await (await fetch(AUTH0_AUDIENCE+method, {
+				
+				//Get Access Token
+				const apiAccessToken = localStorage.getItem('accessToken');
+				if(apiAccessToken==undefined || apiAccessToken=="")
+				{
+					alert("missing access token.");
+				}
+				
+				const myHeaders = new Headers();
+				myHeaders.append('Content-Type', 'application/json');
+				myHeaders.append('Authorization', 'Bearer '+apiAccessToken);
+	
+				let data = await (await fetch(AUTH0_AUDIENCE+method, {
 										  method: 'GET',
 										  headers: myHeaders,
 										})).json();
 										
 						return data;
-					}
+				}
 
-
-
-const myHeaders = new Headers();
-myHeaders.append('Content-Type', 'application/json');
-myHeaders.append('Authorization', 'Bearer '+accessToken);
 
 		
 		
@@ -283,7 +327,9 @@ async function getApplications() {
    //Reset
    rulesForThisClient = [];   //reset
    allRules = []; //reset
-		
+	
+	
+	
 		//Fetch Clients
 		await fetchAsync('clients')
 		.then(response => {
