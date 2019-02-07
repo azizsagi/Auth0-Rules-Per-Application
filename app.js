@@ -4,7 +4,7 @@ window.addEventListener('load', function() {
   var expiresAt;
   var rulesForThisClient = [];
   var allRules = [];
-  var apiAccessToken;
+ 
 
   var content = document.querySelector('.content');
   var loadingSpinner = document.getElementById('loading');
@@ -120,11 +120,11 @@ window.addEventListener('load', function() {
     // Remove isLoggedIn flag from localStorage
     localStorage.removeItem('isLoggedIn');
 	localStorage.removeItem('accessToken');
+	localStorage.removeItem('receivedApiAccessToken');	
     // Remove tokens and expiry time
     accessToken = '';
     idToken = '';
-    expiresAt = 0;
-	apiAccessToken = '';
+    expiresAt = 0;	
     pingMessage.style.display = 'none';
     displayButtons();
   }
@@ -241,7 +241,7 @@ window.addEventListener('load', function() {
   function getApiToken() {
 	  
 	  (async () => {
-		  const rawResponse = await fetch('https://mandhar.auth0.com/oauth/token', {
+		  const rawResponse = await fetch('https://'+AUTH0_DOMAIN+'/oauth/token', {
 			method: 'POST',
 			headers: {
 			   'Content-Type': 'application/json'
@@ -258,7 +258,7 @@ window.addEventListener('load', function() {
 						  });
 						  
 		  const content = await rawResponse.json();          
-		  localStorage.setItem('accessToken',content.access_token);
+		  localStorage.setItem('receivedApiAccessToken',content.access_token);
 		})();
 
    
@@ -302,7 +302,7 @@ var addRuleToAssociatedApplication = function(rule, rulesPerClient) {
 			async function fetchAsync (method) {
 				
 				//Get Access Token
-				const apiAccessToken = localStorage.getItem('accessToken');
+				const apiAccessToken = localStorage.getItem('receivedApiAccessToken');
 				if(apiAccessToken==undefined || apiAccessToken=="")
 				{
 					alert("missing access token.");
