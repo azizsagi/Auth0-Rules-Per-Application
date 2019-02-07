@@ -157,6 +157,7 @@ window.addEventListener('load', function() {
       pingView.style.display = 'none';
       pingViewBtn.style.display = 'none';
       pingPrivate.style.display = 'none';
+	  applicationView.style.display = 'none';
       callPrivateMessage.style.display = 'block';
       loginStatus.innerHTML = 'You are not logged in! Please log in to continue.';
     }
